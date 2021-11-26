@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang='en' dir='ltr'>
+    <head>
+      <meta charset='utf-8'>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+          <title></title>
+     </head>
+    <body>
+        <div id="artists"></div>
+        <div id="tracks"></div>
+    </body>
+    <script>
+        const target = document.querySelector('#tracks');
+        const artistCol = document.querySelector('#artists');
+        const currentPlaylist = window.location.href.split('/').pop();
+        let collaboratives = [];
+        async function getCollabPlaylists(){
+            //
+            let res = await fetch(`https://api.spotify.com/v1/playlists/${currentPlaylist}`,{
+                method: 'GET',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('tkn')}`,
+                }
+            });
+            let resJson = await res.json();
+            console.log(resJson);
+            renderPlaylists(resJson);
+
+        }
+        /*playlists.forEach(list => {
+                if(list.collaborative){
+                    collaboratives.push(list);
+                    
+                }
+            });
+             renderPlaylists(collaboratives);*/
+
+        async function renderPlaylists(list){
+
+                    let title = document.createElement('p');
+                    title.innerText =  list.name;
+                    let subTit = document.createElement('p');
+                    title.className = 'container has-text-white is-size-1 mb-1 has-text-weight-semibold';
+                    subTit.className = 'container has-text-white is-size-5 mb-1';
+                    subTit.innerText =  list.description;
+                    artistCol.appendChild(title);
+                    artistCol.appendChild(subTit);
+                
+                    let tracks = await getTracks(list.id);
+                    let artists = extrapolateArtists(tracks);
+                    artists.forEach(artist=>{
+                        renderArtistRow(artist, tracks);
+                    });
+        }
+
+        function renderArtistRow(artist, tracks){
+            let container = document.createElement('div');
+            container.className = 'container';
+            let content = document.createElement('button');
+            content.className = 'button is-primary has-text-white mb-3 p-1';
+            content.onclick = ()=> getTracksByArtist(artist, tracks);
+            let title = document.createElement('p');
+            title.className = 'has-text-weight-semibold is-size-4 ml-2 mb-1';
+            title.innerText =  artist;
+            content.appendChild(title);
+            container.appendChild(content);
+            artistCol.appendChild(container);
+        }
+
+        async function addToQueue(track){
+            let res = await fetch('https://api.spotify.com/v1/me/player/queue?uri=' + track ,{
+                method: 'POST',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('tkn')}`,
+                }
+            });
+        }
+
+        function getTracksByArtist(artist, tracks){
+            wipe(target);
+            console.log('clicked')
+            let matches = [];
+            tracks.forEach(track=>{
+                if(track.track.artists[0].name == artist){
+                    matches.push(track);
+                }
+            })
+
+            matches.forEach(match => {
+                renderTrackRow(match);
+                //addToQueue(match.track.uri);
+            });
+            renderQueueButton(matches);
+        }
+
+        function renderQueueButton(tracks){
+            let container = document.createElement('div');
+            container.className = 'container';
+            let content = document.createElement('button');
+            content.className = 'button is-primary has-text-white mb-3 p-1';
+            content.onclick = ()=> {tracks.forEach(track=>{
+                addToQueue(track.track.uri);
+            })};
+            let title = document.createElement('p');
+            title.className = 'has-text-weight-semibold is-size-4 ml-2 mb-1';
+            title.innerText =  'Add to queue';
+            content.appendChild(title);
+            container.appendChild(content);
+            target.appendChild(container);
+        }
+
+        function wipe(parent){
+            while (parent.lastChild) {
+        parent.removeChild(parent.lastChild);
+        }
+        }
+        function renderTrackRow(track){
+            
+            let container = document.createElement('div');
+            container.className = 'container';
+            let content = document.createElement('div');
+            content.className = 'card is-one-quarter has-background-primary-dark has-text-white mb-3 p-1';
+            let title = document.createElement('p');
+            let artist = document.createElement('p');
+            let contentParagraphs = [title, artist];
+            title.innerText = track.track.name;
+            artist.innerText = getArtist(track);
+
+            title.className = 'has-text-weight-semibold is-size-4 ml-2 mb-1';
+            
+            artist.className = 'is-size-5 ml-2 mb-1';
+
+            contentParagraphs.forEach(ps => {
+                content.appendChild(ps);
+            });
+
+            container.appendChild(content);
+            target.appendChild(container);
+        }
+
+        function getArtist(track){
+            let artistOut = '';
+            let artists = track.track.artists;
+            for(let artist in artists){
+                if(artist == 0){
+                    artistOut += artists[artist].name;
+                }else{
+                    artistOut += `, ${artists[artist].name}`;
+                }
+            }
+            return artistOut;
+        }
+
+        async function getTracks(id){
+            let tracks = [];
+            let res = await fetch(`https://api.spotify.com/v1/playlists/${id}/tracks?market=it&limit=100`,{
+                method: 'GET',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('tkn')}`,
+                }
+            });
+            let resJson = await res.json();
+            resJson.items.forEach(track=>{
+                tracks.push(track);
+            });
+            let tot = resJson.total;
+            let offset = 100;
+            if(tot - 100 > 0){
+                while(tot - offset > 0){
+                  let res2 = await fetch(`https://api.spotify.com/v1/playlists/${id}/tracks?market=it&limit=100&offset=${offset}`,{
+                  method: 'GET',
+                  headers:{
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('tkn')}`,
+                    }
+                  });
+                  let res2Json = await res2.json();
+                  res2Json.items.forEach(track=>{
+                    tracks.push(track);
+                  });
+                  offset = offset + 100;
+                }
+            }
+            console.log(extrapolateArtists(tracks));
+            return tracks;
+        }
+
+        function extrapolateArtists(tracks){
+            let artists = [];
+            tracks.forEach(track=>{
+                let artistObj =  track.track.artists[0].name;
+                artists.push(artistObj);
+            });
+            const artistsOut = [... new Set(artists)];
+            return artistsOut;
+        }
+
+        getCollabPlaylists();
+    </script>
+    <style>
+        body{
+            padding: 20px;
+            background-color: cadetblue;
+            display: flex;
+            flex-direction: row;
+        }
+        #tracks div{
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top:0;
+        }
+    </style>
+</html>

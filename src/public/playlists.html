@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang='en' dir='ltr'>
+    <head>
+      <meta charset='utf-8'>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+          <title></title>
+     </head>
+    <body>
+        <div>
+            <div id='title' class='has-text-white has-text-weight-semibold is-size-4'>Hi </div>
+        </div>
+        <div id="target"></div>
+    </body>
+    <script>
+        const target = document.querySelector('#target');
+        const title = document.querySelector('#title');
+
+        title.innerText += ' ' +localStorage.getItem('uid');
+        async function getPlaylists(){
+            let res = await fetch(`https://api.spotify.com/v1/users/${localStorage.getItem('uid')}/playlists?limit=50`,{
+                method: 'GET',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('tkn')}`,
+                }
+            });
+            let resJson = await res.json();
+            let playlists = resJson.items;
+            playlists.forEach(list=>{
+                renderPlaylist(list);
+            });
+            console.log(playlists);
+        }
+
+        function renderPlaylist(playlist){
+            let container = document.createElement('div');
+            container.className = 'container';
+            let content = document.createElement('div');
+            content.className = 'card has-background-primary-dark has-text-white mb-3 p-3';
+            content.onclick = () => routeToPlaylist(playlist);
+            let title = document.createElement('p');
+            let artist = document.createElement('p');
+            let pic = document.createElement('img');
+            let picUrl = playlist.images.length > 0 ? playlist.images[0].url: 'https://community.mp3tag.de/uploads/default/original/2X/a/acf3edeb055e7b77114f9e393d1edeeda37e50c9.png';
+            pic.setAttribute('src', picUrl);
+            pic.className = 'image is-128x128'
+            let contentParagraphs = [pic, title, artist];
+            title.innerText = playlist.name;
+            artist.innerText = playlist.owner.display_name;
+
+            title.className = 'has-text-weight-semibold is-size-4 ml-2 mb-1';
+            
+            artist.className = 'is-size-5 ml-2 mb-1';
+
+            contentParagraphs.forEach(ps => {
+                content.appendChild(ps);
+            });
+
+            container.appendChild(content);
+            target.appendChild(container);
+        }
+
+        function routeToPlaylist(playlist){
+            window.location.replace('http://localhost:3000/playlist/' + playlist.id);
+        }
+        getPlaylists();
+
+    </script>
+    <style>
+        body {
+            background-color: cadetblue;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        #target div{
+            cursor: pointer;
+        }
+    </style>
+</html>
