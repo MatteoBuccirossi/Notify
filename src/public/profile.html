@@ -6,14 +6,24 @@
           <title></title>
      </head>
     <body>
-        <div id="artists"></div>
+        
+        <div id="artists">
+            <button id="back" class='button is-link has-text-white mb-3 p-1' onclick='goBack()' ><- Back</button>
+        </div>
         <div id="tracks"></div>
     </body>
     <script>
+        let currentDomain = window.location.href.split('/')[2];
+        console.log(currentDomain);
+        console.log(localStorage);
         const target = document.querySelector('#tracks');
         const artistCol = document.querySelector('#artists');
         const currentPlaylist = window.location.href.split('/').pop();
         let collaboratives = [];
+
+        function goBack(){
+            window.location.replace(`https://${currentDomain}/profile`);
+        }
         async function getCollabPlaylists(){
             //
             let res = await fetch(`https://api.spotify.com/v1/playlists/${currentPlaylist}`,{
@@ -58,7 +68,7 @@
             let container = document.createElement('div');
             container.className = 'container';
             let content = document.createElement('button');
-            content.className = 'button is-primary has-text-white mb-3 p-1';
+            content.className = 'button is-primary  has-text-white mb-3 p-1';
             content.onclick = ()=> getTracksByArtist(artist, tracks);
             let title = document.createElement('p');
             title.className = 'has-text-weight-semibold is-size-4 ml-2 mb-1';
@@ -206,6 +216,14 @@
             background-color: cadetblue;
             display: flex;
             flex-direction: row;
+            min-height: 100vh;
+        }
+
+        #tracks{
+            padding: 20px;
+        }
+        #artists{
+            padding: 20px;
         }
         #tracks div{
             position: -webkit-sticky; /* Safari */

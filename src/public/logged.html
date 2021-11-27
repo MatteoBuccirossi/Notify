@@ -12,6 +12,9 @@
         </div>
     </body>
     <script defer>
+        let currentDomain = window.location.href.split('/')[2];
+        console.log(currentDomain);
+
         function getCode(){
             let url = window.location.href;
             let urlSplit = url.split('code=');
@@ -20,7 +23,7 @@
         }
         async function getToken(cod){
             let data = { code : `${cod}`};
-            let res = await fetch('http://localhost:3000/getToken',{
+            let res = await fetch(`https://${currentDomain}/getToken/${currentDomain}`,{
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,7 +32,7 @@
             });
             let resJson = await res.json();
             localStorage.setItem('tkn', resJson.access_token);
-
+            console.log(resJson);
 
             let resProfile = await fetch('https://api.spotify.com/v1/me', {
                 method: 'GET',
@@ -39,9 +42,10 @@
                 }
             });
             let resProfileJson = await resProfile.json();
+            console.log(resProfileJson);
             localStorage.setItem('uid', resProfileJson.id);
             console.log(resProfileJson);
-            window.location.replace('http://localhost:3000/profile')
+            window.location.replace(`https://${currentDomain}/profile`)
         }
         getToken(getCode());
     </script>

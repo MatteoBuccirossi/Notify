@@ -12,6 +12,9 @@
         <div id="target"></div>
     </body>
     <script>
+        let currentDomain = window.location.href.split('/')[2];
+        console.log(currentDomain);
+        console.log(localStorage)
         const target = document.querySelector('#target');
         const title = document.querySelector('#title');
 
@@ -61,7 +64,7 @@
         }
 
         function routeToPlaylist(playlist){
-            window.location.replace('http://localhost:3000/playlist/' + playlist.id);
+            window.location.replace(`https://${currentDomain}/playlist/` + playlist.id);
         }
         getPlaylists();
 

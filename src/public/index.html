@@ -11,17 +11,15 @@
             🐉Notify
         </div>
         <h2>Enter the realm of henanced playlist listening</h2>
-        <a id="spotiCom" class="button is-success" href="http://localhost:3000/spotiCom">Enter</a>
+        <a id="spotiCom" class="button is-success">Enter</a>
 
     </body>
     <script>
+        let currentDomain = window.location.href.split('/')[2];
+        console.log(currentDomain);
         let comBtn = document.querySelector('#spotiCom');
-        async function clickHandler(e){
-            let res = await fetch('http://localhost:3000/spotiCom');
-            let resJson = await res.json();
-            console.log(resJson);
-        }
-        //comBtn.onclick = clickHandler;
+        comBtn.setAttribute('href', `https://${currentDomain}/spotiCom/${currentDomain}`);
+        //comBtn.onclick = ;
 
     </script>
     <style>

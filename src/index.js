@@ -29,8 +29,12 @@ app.get('/playlist/:id', (req, res)=>{
     res.sendFile(path.join(__dirname, 'public/profile.html'))
 });
 
-app.post('/getToken', async(req, res)=>{
-    let redirect = 'http://localhost:3000/';
+
+
+app.post('/getToken/:current', async(req, res)=>{
+    let domain = req.params.current;
+    console.log(domain);
+    let redirect = `https://${domain}/`;
     const details = {
         grant_type: "authorization_code",
         code: req.body.code,
@@ -51,17 +55,22 @@ app.post('/getToken', async(req, res)=>{
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
     let resJson = await resp.json();
+    console.log(resJson);
     res.send(await resJson);
 });
 
-app.get('/spotiCom', (req, res)=>{
+app.get('/spotiCom/:current', (req, res)=>{
     let scopes = 'user-read-private playlist-read-collaborative playlist-read-private user-modify-playback-state';
-    let redirect = 'http://localhost:3000/';
+    let domain = req.params.current;
+    let redirect = `https://${domain}/`;
+    console.log(domain, redirect);
     res.redirect('https://accounts.spotify.com/authorize' +
     '?response_type=code' +
     '&client_id=' + process.env.CLIENT_ID + '&scope=' + encodeURIComponent(scopes)+
     '&redirect_uri=' + encodeURIComponent(redirect));
 });
+
+
 
 //listening config
 app.listen(port, ()=>{
